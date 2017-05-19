@@ -2,6 +2,7 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -43,10 +44,11 @@ public class Onirim extends JFrame {
 		public ArrayList<Card> doors = new ArrayList<Card>();
 		public ArrayList<Card> limbo = new ArrayList<Card>();
 		
-		public boolean ignoreNightmare;
+		public boolean ignoreNightmare,nightmareInPlay;;
 		public boolean firstDraw = true;
 		
 		public Deck deck = new Deck(10,850,100,140,cardBack);
+		public Discard discard = new Discard(10,10,100,750);
 		
 		public Random rand = new Random();
 		
@@ -82,7 +84,7 @@ public class Onirim extends JFrame {
 				limbo.add(new Card (greenKey,"locationKey","green"));
 				limbo.add(new Card (tanKey,"locationKey","tan"));
 			}
-			for (int i = 0; i < 10; i++)
+			for (int i = 0; i < 100; i++)
 				limbo.add(new Card (nightmare,"nightmare",""));
 			shuffleDeck();
 		}
@@ -113,12 +115,13 @@ public class Onirim extends JFrame {
 		public void drawStuff(Graphics2D g)
 		{
 			g.drawImage(deck.getImage(), deck.getX(), deck.getY(), 100, 140,this);
-			if(!hand.isEmpty())
+			for(int i=0;i<hand.size();i++)
 			{
-				for(int i=0;i<hand.size();i++)
-				{
-					g.drawImage(hand.get(i).getImage(), hand.get(i).getX(), hand.get(i).getY(), 100, 140,this);
-				}
+				g.drawImage(hand.get(i).getImage(), hand.get(i).getX(), hand.get(i).getY(), 100, 140,this);
+			}
+			for (int i = 0; i < limbo.size(); i++) 
+			{
+				g.drawImage(limbo.get(i).getImage(), limbo.get(i).getX(), limbo.get(i).getY(), 100, 140,this);
 			}
 			repaint();
 		}
@@ -135,6 +138,33 @@ public class Onirim extends JFrame {
 
 			}
 			shuffleDeck();
+		}
+		public void discardHand()
+		{
+			while(hand.size()!=0)
+				discard.addCard(hand.remove(0));
+			discard.addCard(limbo.remove(limbo.size()-1));
+			nightmareInPlay=false;
+		}
+		public void discardTopFiveDeck()
+		{
+			for(int i=0; i<5;i++)
+				discard.addCard(deck.getCards().remove(0));
+			discard.addCard(limbo.remove(limbo.size()-1));
+			nightmareInPlay=false;
+		}
+		public void discardKey(Point p)
+		{
+			for (int i=0;i<hand.size();i++) 
+			{
+				if (hand.get(i).getType().contains("key")&&hand.get(i).getRect().contains(p))
+				{
+					discard.addCard(hand.remove(i));
+					discard.addCard(limbo.remove(limbo.size()-1));
+					nightmareInPlay=false;
+					break;
+				}
+			}
 		}
 		public void shuffleDeck()
 		{
@@ -155,7 +185,7 @@ public class Onirim extends JFrame {
 		}
 		public boolean canDraw()
 		{
-			if (!(hand.size()>4)) 
+			if (!(hand.size()>4)&&!nightmareInPlay) 
 			{
 				return true;
 			}
@@ -165,10 +195,9 @@ public class Onirim extends JFrame {
 		{
 			for (int i = 0; i < hand.size(); i++) 
 			{
-				hand.get(i).getRect().setLocation(130+(40*i),850);
+				hand.get(i).getRect().setLocation(130+(60*i),850);
 			}
 		}
-		
 		private class Mousey implements MouseListener, MouseMotionListener
 		{	
 			@Override
@@ -183,13 +212,11 @@ public class Onirim extends JFrame {
 
 			@Override
 			public void mouseMoved(MouseEvent e) {
-				// TODO Auto-generated method stub
 				
 			}
 
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				// TODO Auto-generated method stub
 				
 			}
 
@@ -210,19 +237,28 @@ public class Onirim extends JFrame {
 			{
 				if(deck.isMouse(e)&&canDraw()) 
 				{
-					if (firstDraw) 
-					{
-						fillHand();
-					}
-					else
+//					if (firstDraw||hand.size()==0) 
+//					{
+//						fillHand();
+//					}
+//					else
 					{
 						hand.add(deck.drawCard());
 						if (hand.get(hand.size()-1).getType().contains("nightmare")||hand.get(hand.size()-1).getType().contains("door")) 
 						{
 							limbo.add(hand.remove(hand.size()-1));
+							limbo.get(limbo.size()-1).getRect().setLocation(400+(100*limbo.size()), 850);
+							if(limbo.get(limbo.size()-1).getType().contains("nightmare"))
+								nightmareInPlay=true;
 						}
 					}
 					organizeHand();
+				}
+				else if (nightmareInPlay) //TODO add checks for location
+				{
+					discardKey(e.getPoint());
+					discardHand();
+					discardTopFiveDeck();
 				}
 				for(int i=hand.size()-1;-1<i;i--)
 				{
@@ -232,6 +268,10 @@ public class Onirim extends JFrame {
 						hand.get(i).setSelected(true);
 						break;
 					}
+				}
+				if(hand.size()==5 && limbo.size()>0)
+				{
+					shuffleDeck();
 				}
 			}
 
