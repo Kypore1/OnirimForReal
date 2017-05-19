@@ -8,7 +8,9 @@ public class Deck extends Area
 		super(x, y, w, h);
 		image = img;
 	}
+	
 	public Image getImage() {return image;}
+	
 	public int findIndexOfCard(String type, String color)
 	{
 		for(int i=0; i<cards.size();i++)
@@ -19,6 +21,10 @@ public class Deck extends Area
 			}
 		}
 		return -1;
+	}
+	public Card drawCard()
+	{
+		return cards.remove(0);
 	}
 
 

@@ -1,9 +1,11 @@
+import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 
 public class Area 
 {
-	private Rectangle myRect = new Rectangle();
+	protected Rectangle myRect = new Rectangle();
 	protected ArrayList<Card> cards = new ArrayList<Card>();
 	
 	public Area(int x, int y,int w,int h)
@@ -34,5 +36,10 @@ public class Area
 	{
 		cards.remove(c);
 	}
+	public boolean isMouse(MouseEvent e)
+	{
+		return myRect.contains(e.getPoint());
+	}
+
 	
 }
