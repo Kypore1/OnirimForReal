@@ -7,5 +7,12 @@ public class Discard extends Area
 		super(x, y, w, h);
 		// TODO Auto-generated constructor stub
 	}
+	public void organizeDiscard()
+	{
+		for (int i = 0; i < cards.size(); i++) 
+		{
+			cards.get(i).getRect().setLocation(10,10+(20*i));
+		}
+	}
 
 }

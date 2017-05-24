@@ -1,3 +1,4 @@
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -47,8 +48,11 @@ public class Onirim extends JFrame {
 		public boolean ignoreNightmare,nightmareInPlay;;
 		public boolean firstDraw = true;
 		
+		public boolean endGame;
+		
 		public Deck deck = new Deck(10,850,100,140,cardBack);
-		public Discard discard = new Discard(10,10,100,750);
+		public Discard discard = new Discard(10,10,100,700);
+		public PlayingArea play = new PlayingArea(130,10,1000,700);
 		
 		public Random rand = new Random();
 		
@@ -84,7 +88,7 @@ public class Onirim extends JFrame {
 				limbo.add(new Card (greenKey,"locationKey","green"));
 				limbo.add(new Card (tanKey,"locationKey","tan"));
 			}
-			for (int i = 0; i < 100; i++)
+			for (int i = 0; i < 10; i++)
 				limbo.add(new Card (nightmare,"nightmare",""));
 			shuffleDeck();
 		}
@@ -123,6 +127,18 @@ public class Onirim extends JFrame {
 			{
 				g.drawImage(limbo.get(i).getImage(), limbo.get(i).getX(), limbo.get(i).getY(), 100, 140,this);
 			}
+			for (int i = 0; i < discard.getCards().size(); i++) 
+			{
+				g.drawImage(discard.getCards().get(i).getImage(), discard.getCards().get(i).getX(), discard.getCards().get(i).getY(), 100, 140,this);
+			}
+			for (int i = 0; i < play.getCards().size(); i++) 
+			{
+				g.drawImage(play.getCards().get(i).getImage(), play.getCards().get(i).getX(), play.getCards().get(i).getY(), 100, 140,this);
+			}
+			g.setColor(Color.WHITE);
+			g.setStroke(new BasicStroke(4));
+			g.draw(discard.getMyRect());
+			g.draw(play.getMyRect());
 			repaint();
 		}
 		public void fillHand()
@@ -135,8 +151,9 @@ public class Onirim extends JFrame {
 				}
 				else if(hand.size()<5)
 					hand.add(deck.drawCard());
-
 			}
+			firstDraw=false;
+			ignoreNightmare=false;
 			shuffleDeck();
 		}
 		public void discardHand()
@@ -145,11 +162,29 @@ public class Onirim extends JFrame {
 				discard.addCard(hand.remove(0));
 			discard.addCard(limbo.remove(limbo.size()-1));
 			nightmareInPlay=false;
+			ignoreNightmare=true;
 		}
 		public void discardTopFiveDeck()
 		{
-			for(int i=0; i<5;i++)
-				discard.addCard(deck.getCards().remove(0));
+			int counter = 5;
+			int pos = 0;
+			while(counter!=0)
+			{
+				if(deck.getCards().size()==0)
+				{
+					endGame=true;
+				}
+				if(pos>=deck.getCards().size())
+					break;
+				if(!(deck.getCards().get(pos).getType().contains("nightmare")||deck.getCards().get(pos).getType().contains("Door")))
+				{
+					discard.addCard(deck.getCards().remove(pos));
+					counter--;
+				}
+				else 
+					pos++;
+			}
+			ignoreNightmare=true;
 			discard.addCard(limbo.remove(limbo.size()-1));
 			nightmareInPlay=false;
 		}
@@ -162,6 +197,7 @@ public class Onirim extends JFrame {
 					discard.addCard(hand.remove(i));
 					discard.addCard(limbo.remove(limbo.size()-1));
 					nightmareInPlay=false;
+					ignoreNightmare=true;
 					break;
 				}
 			}
@@ -237,11 +273,11 @@ public class Onirim extends JFrame {
 			{
 				if(deck.isMouse(e)&&canDraw()) 
 				{
-//					if (firstDraw||hand.size()==0) 
-//					{
-//						fillHand();
-//					}
-//					else
+					if (firstDraw||hand.size()==0) 
+					{
+						fillHand();
+					}
+					else
 					{
 						hand.add(deck.drawCard());
 						if (hand.get(hand.size()-1).getType().contains("nightmare")||hand.get(hand.size()-1).getType().contains("door")) 
@@ -257,8 +293,13 @@ public class Onirim extends JFrame {
 				else if (nightmareInPlay) //TODO add checks for location
 				{
 					discardKey(e.getPoint());
+					
+					if(deck.isMouse(e))
+						discardTopFiveDeck();
+					if(e.getY()>850&&e.getX()>130&&e.getX()<430)
 					discardHand();
-					discardTopFiveDeck();
+					discard.organizeDiscard();
+					
 				}
 				for(int i=hand.size()-1;-1<i;i--)
 				{
@@ -278,12 +319,29 @@ public class Onirim extends JFrame {
 			@Override
 			public void mouseReleased(MouseEvent e) 
 			{
-				for(Card c:hand)
-					if (c.getSelected()) 
+				for (int i = 0; i < hand.size(); i++) 
+				{
+					if (hand.get(i).getSelected()) 
 					{
-						c.setSelected(false);
-						c.getRect().setLocation(c.getOldRect().getLocation());
+						if (discard.isMouse(e))
+						{
+							discard.addCard(hand.remove(i));
+							discard.organizeDiscard();
+							organizeHand();
+						}
+						else if(play.isMouse(e)&&play.validLocationPlay(hand.get(i)))
+						{
+							play.addCard(hand.remove(i));
+							play.organizePlay();//TODO draw play cards
+						}
+						else
+						{
+							hand.get(i).setSelected(false);
+							hand.get(i).getRect().setLocation(hand.get(i).getOldRect().getLocation());
+						}
 					}
+				}
+					
 			}
 		}
 }

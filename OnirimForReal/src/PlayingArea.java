@@ -25,7 +25,11 @@ public class PlayingArea extends Area{
 
 	public boolean validLocationPlay(Card c)
 	{
-		if(!cards.isEmpty())
+		if(cards.isEmpty())
+		{
+			return true;
+		}
+		else if(!cards.isEmpty())
 		{
 			if(c.getType().contains(cards.get(cards.size()-1).getType())&&!(c.getType().contains("door")||c.getType().contains("dream")))
 				return true;
@@ -49,5 +53,12 @@ public class PlayingArea extends Area{
 			return true;
 		}
 		return false;
+	}
+	public void organizePlay()
+	{
+		for (int i = 0; i < cards.size(); i++) 
+		{
+			cards.get(i).getRect().setLocation(10+(70*i),10);
+		}
 	}
 }
