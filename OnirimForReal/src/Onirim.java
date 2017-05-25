@@ -48,7 +48,7 @@ public class Onirim extends JFrame {
 		public boolean ignoreNightmare,nightmareInPlay;;
 		public boolean firstDraw = true;
 		
-		public boolean endGame;
+		public boolean endGame,lost;
 		
 		public Deck deck = new Deck(10,850,100,140,cardBack);
 		public Discard discard = new Discard(10,10,100,700);
@@ -88,14 +88,14 @@ public class Onirim extends JFrame {
 				limbo.add(new Card (greenKey,"locationKey","green"));
 				limbo.add(new Card (tanKey,"locationKey","tan"));
 			}
-			for(int i = 0; i<222;i++)
+			for(int i = 0; i<2;i++)
 			{
 				limbo.add(new Card(redDoor, "door", "red"));
 				limbo.add(new Card(blueDoor, "door", "blue"));
 				limbo.add(new Card(greenDoor, "door", "green"));
 				limbo.add(new Card(tanDoor, "door", "tan"));
 			}
-			for (int i = 0; i < 210; i++)
+			for (int i = 0; i < 10; i++)
 				limbo.add(new Card (nightmare,"nightmare",""));
 			shuffleDeck();
 		}
@@ -125,31 +125,38 @@ public class Onirim extends JFrame {
 		
 		public void drawStuff(Graphics2D g)
 		{
-			g.drawImage(deck.getImage(), deck.getX(), deck.getY(), 100, 140,this);
-			for(int i=0;i<hand.size();i++)
+			if(!checkForLoss())
 			{
-				g.drawImage(hand.get(i).getImage(), hand.get(i).getX(), hand.get(i).getY(), 100, 140,this);
+				g.drawImage(deck.getImage(), deck.getX(), deck.getY(), 100, 140,this);
+				for(int i=0;i<hand.size();i++)
+				{
+					g.drawImage(hand.get(i).getImage(), hand.get(i).getX(), hand.get(i).getY(), 100, 140,this);
+				}
+				for (int i = 0; i < limbo.size(); i++) 
+				{
+					g.drawImage(limbo.get(i).getImage(), limbo.get(i).getX(), limbo.get(i).getY(), 100, 140,this);
+				}
+				for (int i = 0; i < discard.getCards().size(); i++) 
+				{
+					g.drawImage(discard.getCards().get(i).getImage(), discard.getCards().get(i).getX(), discard.getCards().get(i).getY(), 100, 140,this);
+				}
+				for (int i = 0; i < play.getCards().size(); i++) 
+				{
+					g.drawImage(play.getCards().get(i).getImage(), play.getCards().get(i).getX(), play.getCards().get(i).getY(), 100, 140,this);
+				}
+				for(int i=0;i<doors.size();i++)
+				{
+					g.drawImage(doors.get(i).getImage(), doors.get(i).getX(), doors.get(i).getY(), 100, 140,this);
+				}
+				g.setColor(Color.WHITE);
+				g.setStroke(new BasicStroke(4));
+				g.draw(discard.getMyRect());
+				g.draw(play.getMyRect());
 			}
-			for (int i = 0; i < limbo.size(); i++) 
+			else
 			{
-				g.drawImage(limbo.get(i).getImage(), limbo.get(i).getX(), limbo.get(i).getY(), 100, 140,this);
+				g.drawString("Over", 10, 10);
 			}
-			for (int i = 0; i < discard.getCards().size(); i++) 
-			{
-				g.drawImage(discard.getCards().get(i).getImage(), discard.getCards().get(i).getX(), discard.getCards().get(i).getY(), 100, 140,this);
-			}
-			for (int i = 0; i < play.getCards().size(); i++) 
-			{
-				g.drawImage(play.getCards().get(i).getImage(), play.getCards().get(i).getX(), play.getCards().get(i).getY(), 100, 140,this);
-			}
-			for(int i=0;i<doors.size();i++)
-			{
-				g.drawImage(doors.get(i).getImage(), doors.get(i).getX(), doors.get(i).getY(), 100, 140,this);
-			}
-			g.setColor(Color.WHITE);
-			g.setStroke(new BasicStroke(4));
-			g.draw(discard.getMyRect());
-			g.draw(play.getMyRect());
 			repaint();
 		}
 		public void fillHand()
@@ -166,6 +173,25 @@ public class Onirim extends JFrame {
 			firstDraw=false;
 			ignoreNightmare=false;
 			shuffleDeck();
+		}
+		public boolean checkForLoss()
+		{
+			if(deck.getCards().size()<=0&&hand.size()!=5)
+			{
+				if(doors.size()==8)
+				{
+					lost=false;
+					endGame=true;
+					return true;
+				}
+				else 
+				{
+					lost=true;
+					endGame=true;
+					return true;
+				}
+			}
+			return false;
 		}
 		public void discardHand()
 		{
