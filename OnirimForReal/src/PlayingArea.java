@@ -2,7 +2,6 @@ import java.util.ArrayList;
 
 public class PlayingArea extends Area{
 
-	ArrayList<Card> cards = new ArrayList<Card>();
 	ArrayList<Card> currentSet = new ArrayList<Card>();
 	public PlayingArea(int x, int y, int w, int h)
 	{
@@ -12,7 +11,7 @@ public class PlayingArea extends Area{
 	public void addCard(Card c)
 	{
 		cards.add(c);
-		if(currentSet.size()>3)
+		if(currentSet.size()>=3)
 		{
 			currentSet.remove(0);
 			currentSet.add(c);
@@ -22,7 +21,6 @@ public class PlayingArea extends Area{
 			currentSet.add(c);
 		}
 	}
-
 	public boolean validLocationPlay(Card c)
 	{
 		if(cards.isEmpty())
@@ -31,7 +29,7 @@ public class PlayingArea extends Area{
 		}
 		else if(!cards.isEmpty())
 		{
-			if(c.getType().contains(cards.get(cards.size()-1).getType())&&!(c.getType().contains("door")||c.getType().contains("dream")))
+			if(!c.getType().contains(cards.get(cards.size()-1).getType())&&!(c.getType().contains("door")||c.getType().contains("dream")))
 				return true;
 		}
 		return false;
@@ -42,15 +40,18 @@ public class PlayingArea extends Area{
 			return true;
 		return false;
 	}
-	
-	public boolean validSet(Card a, Card b, Card c)// checks to see if the sum of a set is less than or equal to four
+	public void clearCurrentSet(){currentSet.clear();}
+	public boolean validSet()// checks to see if the sum of a set is less than or equal to four
 	{
-		boolean checkOne = compareCards(a,b);
-		boolean checkTwo =compareCards(a,c);
-		boolean checkThree = compareCards(c,b);
-		if(checkOne&&checkTwo&&checkThree)
+		if(currentSet.size()==3)
 		{
-			return true;
+			boolean checkOne = compareCards(currentSet.get(0),currentSet.get(1));
+			boolean checkTwo =compareCards(currentSet.get(1),currentSet.get(2));
+			boolean checkThree = compareCards(currentSet.get(2),currentSet.get(0));
+			if(checkOne&&checkTwo&&checkThree)
+			{
+				return true;
+			}
 		}
 		return false;
 	}
@@ -58,7 +59,8 @@ public class PlayingArea extends Area{
 	{
 		for (int i = 0; i < cards.size(); i++) 
 		{
-			cards.get(i).getRect().setLocation(10+(70*i),10);
+			
+			cards.get(i).getRect().setLocation(130+(70*i),10);
 		}
 	}
 }

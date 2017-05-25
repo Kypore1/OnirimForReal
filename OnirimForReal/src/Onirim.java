@@ -81,14 +81,21 @@ public class Onirim extends JFrame {
 				limbo.add(new Card (greenMoon,"locationMoon","green"));
 				limbo.add(new Card (tanMoon,"locationMoon","tan"));
 			}
-			for (int i = 0; i < 9; i++)  // add keys
+			for (int i = 0; i < 3; i++)  // add keys
 			{
-				limbo.add(new Card (redSun,"locationKey","red"));
+				limbo.add(new Card (redKey,"locationKey","red"));
 				limbo.add(new Card (blueKey,"locationKey","blue"));
 				limbo.add(new Card (greenKey,"locationKey","green"));
 				limbo.add(new Card (tanKey,"locationKey","tan"));
 			}
-			for (int i = 0; i < 10; i++)
+			for(int i = 0; i<222;i++)
+			{
+				limbo.add(new Card(redDoor, "door", "red"));
+				limbo.add(new Card(blueDoor, "door", "blue"));
+				limbo.add(new Card(greenDoor, "door", "green"));
+				limbo.add(new Card(tanDoor, "door", "tan"));
+			}
+			for (int i = 0; i < 210; i++)
 				limbo.add(new Card (nightmare,"nightmare",""));
 			shuffleDeck();
 		}
@@ -135,6 +142,10 @@ public class Onirim extends JFrame {
 			{
 				g.drawImage(play.getCards().get(i).getImage(), play.getCards().get(i).getX(), play.getCards().get(i).getY(), 100, 140,this);
 			}
+			for(int i=0;i<doors.size();i++)
+			{
+				g.drawImage(doors.get(i).getImage(), doors.get(i).getX(), doors.get(i).getY(), 100, 140,this);
+			}
 			g.setColor(Color.WHITE);
 			g.setStroke(new BasicStroke(4));
 			g.draw(discard.getMyRect());
@@ -158,47 +169,74 @@ public class Onirim extends JFrame {
 		}
 		public void discardHand()
 		{
-			while(hand.size()!=0)
-				discard.addCard(hand.remove(0));
-			discard.addCard(limbo.remove(limbo.size()-1));
-			nightmareInPlay=false;
-			ignoreNightmare=true;
-		}
-		public void discardTopFiveDeck()
-		{
-			int counter = 5;
-			int pos = 0;
-			while(counter!=0)
+			if(nightmareInPlay)
 			{
-				if(deck.getCards().size()==0)
-				{
-					endGame=true;
-				}
-				if(pos>=deck.getCards().size())
-					break;
-				if(!(deck.getCards().get(pos).getType().contains("nightmare")||deck.getCards().get(pos).getType().contains("Door")))
-				{
-					discard.addCard(deck.getCards().remove(pos));
-					counter--;
-				}
-				else 
-					pos++;
+				while(hand.size()!=0)
+					discard.addCard(hand.remove(0));
+				discard.addCard(limbo.remove(limbo.size()-1));
+				nightmareInPlay=false;
+				ignoreNightmare=true;
 			}
-			ignoreNightmare=true;
-			discard.addCard(limbo.remove(limbo.size()-1));
-			nightmareInPlay=false;
+		}
+		public void discardTopFiveDeck()//TODO make sure you dont draw another nightmare
+		{
+			if(nightmareInPlay)
+			{
+				int counter = 5;
+				int pos = 0;
+				while(counter!=0)
+				{
+					if(deck.getCards().size()==0)
+					{
+						endGame=true;
+					}
+					if(pos>=deck.getCards().size())
+						break;
+					if(!(deck.getCards().get(pos).getType().contains("nightmare")||deck.getCards().get(pos).getType().contains("door")))
+					{
+						discard.addCard(deck.getCards().remove(pos));
+						counter--;
+					}
+					else 
+						pos++;
+				}
+				ignoreNightmare=true;
+				discard.addCard(limbo.remove(limbo.size()-1));
+				nightmareInPlay=false;
+			}
 		}
 		public void discardKey(Point p)
 		{
-			for (int i=0;i<hand.size();i++) 
-			{
-				if (hand.get(i).getType().contains("key")&&hand.get(i).getRect().contains(p))
+			if(nightmareInPlay)
 				{
-					discard.addCard(hand.remove(i));
-					discard.addCard(limbo.remove(limbo.size()-1));
-					nightmareInPlay=false;
-					ignoreNightmare=true;
-					break;
+				for (int i=0;i<hand.size();i++) 
+				{
+					if (hand.get(i).getType().contains("Key")&&hand.get(i).getRect().contains(p))
+					{
+						discard.addCard(hand.remove(i));
+						discard.addCard(limbo.remove(limbo.size()-1));
+						nightmareInPlay=false;
+						ignoreNightmare=true;
+						break;
+					}
+				}
+			}
+		}
+		public void discardDoor(Point p)
+		{
+			if(nightmareInPlay)
+			{
+				for (int i=0;i<doors.size();i++) 
+				{
+					if (doors.get(i).getRect().contains(p))
+					{
+						deck.addCard(doors.remove(i));
+						discard.addCard(limbo.remove(limbo.size()-1));
+						nightmareInPlay=false;
+						ignoreNightmare=true;
+						shuffleDeck();
+						break;
+					}
 				}
 			}
 		}
@@ -231,7 +269,14 @@ public class Onirim extends JFrame {
 		{
 			for (int i = 0; i < hand.size(); i++) 
 			{
-				hand.get(i).getRect().setLocation(130+(60*i),850);
+				hand.get(i).getRect().setLocation(130+(105*i),850);
+			}
+		}
+		public void organizeDoors()
+		{
+			for (int i = 0; i < doors.size(); i++) 
+			{
+				doors.get(i).getRect().setLocation(1150,10+(60*i));
 			}
 		}
 		private class Mousey implements MouseListener, MouseMotionListener
@@ -283,21 +328,26 @@ public class Onirim extends JFrame {
 						if (hand.get(hand.size()-1).getType().contains("nightmare")||hand.get(hand.size()-1).getType().contains("door")) 
 						{
 							limbo.add(hand.remove(hand.size()-1));
-							limbo.get(limbo.size()-1).getRect().setLocation(400+(100*limbo.size()), 850);
+							limbo.get(limbo.size()-1).getRect().setLocation(500+(100*limbo.size()), 850);
 							if(limbo.get(limbo.size()-1).getType().contains("nightmare"))
 								nightmareInPlay=true;
 						}
 					}
 					organizeHand();
 				}
-				else if (nightmareInPlay) //TODO add checks for location
+				else if (nightmareInPlay)
 				{
 					discardKey(e.getPoint());
 					
+					discardDoor(e.getPoint());
+					
 					if(deck.isMouse(e))
 						discardTopFiveDeck();
-					if(e.getY()>850&&e.getX()>130&&e.getX()<430)
-					discardHand();
+					
+					for (int i = 0; i < hand.size(); i++) 
+						if(hand.get(i).getRect().contains(e.getPoint()))
+							discardHand();
+					
 					discard.organizeDiscard();
 					
 				}
@@ -332,7 +382,13 @@ public class Onirim extends JFrame {
 						else if(play.isMouse(e)&&play.validLocationPlay(hand.get(i)))
 						{
 							play.addCard(hand.remove(i));
-							play.organizePlay();//TODO draw play cards
+							play.organizePlay();
+							if(play.validSet())
+							{
+								doors.add(deck.getCards().remove(deck.findIndexOfCard("door", play.getCards().get(play.getCards().size()-1).getColor())));
+								organizeDoors();
+								play.clearCurrentSet();
+							}
 						}
 						else
 						{
