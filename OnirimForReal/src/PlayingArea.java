@@ -57,10 +57,17 @@ public class PlayingArea extends Area{
 	}
 	public void organizePlay()
 	{
+		int rows=0;
+		int coloums=0;
 		for (int i = 0; i < cards.size(); i++) 
 		{
-			
-			cards.get(i).getRect().setLocation(130+(70*i),10);
+			if (i%14==0) 
+			{
+				rows++;
+				coloums=0;
+			}
+			cards.get(i).getRect().setLocation(130+(65*coloums),10+(100*rows));
+			coloums++;
 		}
 	}
 }

@@ -24,6 +24,14 @@ public class Deck extends Area
 	}
 	public Card drawCard()
 	{
+		int counter=0;
+		for(int i=0;i<cards.size();i++)
+		{
+			if (cards.get(i).getType().contains("mare")) {
+				counter++;
+			}
+		}
+		System.out.println(counter);
 		return cards.remove(0);
 	}
 

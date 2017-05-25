@@ -248,6 +248,19 @@ public class Onirim extends JFrame {
 				}
 			}
 		}
+		public void doorFromKey(Point p)
+		{
+			for(int i=0;i<hand.size();i++)
+				if (limbo.get(limbo.size()-1).getColor().equals(hand.get(i).getColor())&&hand.get(i).getType().contains("Key")&&hand.get(i).getRect().contains(p)) 
+				{
+					doors.add(limbo.remove(limbo.size()-1));
+					discard.addCard(hand.remove(i));
+					organizeDoors();
+					organizeHand();
+					discard.organizeDiscard();
+					break;
+				}
+		}
 		public void discardDoor(Point p)
 		{
 			if(nightmareInPlay)
@@ -272,16 +285,8 @@ public class Onirim extends JFrame {
 			{
 				deck.addCard(limbo.remove(0));
 			}
-			int rando = 0;
-			rando = rand.nextInt(deck.getCards().size());
-			Card temp = null;
-			for(int i = 0; i <deck.getCards().size(); i++)
-			{
-				temp = deck.getCards().get(i);
-				deck.getCards().set(i, deck.getCards().get(rando));
-				deck.getCards().set(rando, temp);
-				rando = rand.nextInt(deck.getCards().size());
-			}
+			System.out.println("Eletric");
+			Collections.shuffle(deck.getCards());
 		}
 		public boolean canDraw()
 		{
@@ -342,6 +347,8 @@ public class Onirim extends JFrame {
 			@Override
 			public void mousePressed(MouseEvent e) 
 			{
+				if(!limbo.isEmpty()&&limbo.get(limbo.size()-1).getType().contains("door"))
+					doorFromKey(e.getPoint());
 				if(deck.isMouse(e)&&canDraw()) 
 				{
 					if (firstDraw||hand.size()==0) 
@@ -413,6 +420,7 @@ public class Onirim extends JFrame {
 							{
 								doors.add(deck.getCards().remove(deck.findIndexOfCard("door", play.getCards().get(play.getCards().size()-1).getColor())));
 								organizeDoors();
+								shuffleDeck();
 								play.clearCurrentSet();
 							}
 						}
