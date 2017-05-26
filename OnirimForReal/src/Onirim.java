@@ -1,15 +1,17 @@
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Point;
 import java.awt.Toolkit;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Random;
 
@@ -44,6 +46,7 @@ public class Onirim extends JFrame {
 		public ArrayList<Card> hand = new ArrayList<Card>();
 		public ArrayList<Card> doors = new ArrayList<Card>();
 		public ArrayList<Card> limbo = new ArrayList<Card>();
+		public ArrayList<Card> pro = new ArrayList<Card>();
 		
 		public boolean ignoreNightmare,nightmareInPlay;;
 		public boolean firstDraw = true;
@@ -110,8 +113,9 @@ public class Onirim extends JFrame {
 			addMouseMotionListener(new Mousey());
 			pan.setBackground(Color.DARK_GRAY);
 			getContentPane().add(pan);
-			setResizable(false);
+			setResizable(true);
 			setVisible(true);
+			addKeyListener(new KeyLissy());
 		}
 		
 		private class MyPanel extends JPanel
@@ -125,7 +129,7 @@ public class Onirim extends JFrame {
 		
 		public void drawStuff(Graphics2D g)
 		{
-			if(!checkForLoss())
+			if(!checkForEnd())
 			{
 				g.drawImage(deck.getImage(), deck.getX(), deck.getY(), 100, 140,this);
 				for(int i=0;i<hand.size();i++)
@@ -148,6 +152,10 @@ public class Onirim extends JFrame {
 				{
 					g.drawImage(doors.get(i).getImage(), doors.get(i).getX(), doors.get(i).getY(), 100, 140,this);
 				}
+				for(int i=0;i<pro.size();i++)
+				{
+					g.drawImage(pro.get(i).getImage(), pro.get(i).getX(), pro.get(i).getY(), 100, 140,this);
+				}
 				g.setColor(Color.WHITE);
 				g.setStroke(new BasicStroke(4));
 				g.draw(discard.getMyRect());
@@ -155,7 +163,12 @@ public class Onirim extends JFrame {
 			}
 			else
 			{
-				g.drawString("Over", 10, 10);
+				g.setColor(Color.WHITE);
+				g.setFont(new Font("Papyrus",Font.PLAIN,200));
+				if(lost)
+					g.drawString("You Lost", 130, 10);
+				else
+					g.drawString("You Won", 150, 500);
 			}
 			repaint();
 		}
@@ -174,23 +187,21 @@ public class Onirim extends JFrame {
 			ignoreNightmare=false;
 			shuffleDeck();
 		}
-		public boolean checkForLoss()
+		public boolean checkForEnd()
 		{
+			if(doors.size()==8)
+			{
+				lost=false;
+				endGame=true;
+				return true;
+			}
 			if(deck.getCards().size()<=0&&hand.size()!=5)
 			{
-				if(doors.size()==8)
-				{
-					lost=false;
-					endGame=true;
-					return true;
-				}
-				else 
-				{
 					lost=true;
 					endGame=true;
 					return true;
-				}
 			}
+
 			return false;
 		}
 		public void discardHand()
@@ -220,11 +231,11 @@ public class Onirim extends JFrame {
 						break;
 					if(!(deck.getCards().get(pos).getType().contains("nightmare")||deck.getCards().get(pos).getType().contains("door")))
 					{
-						discard.addCard(deck.getCards().remove(pos));
+						discard.addCard(deck.getCards().remove(0));
 						counter--;
 					}
-					else 
-						pos++;
+					else
+						limbo.add(deck.getCards().remove(0));
 				}
 				ignoreNightmare=true;
 				discard.addCard(limbo.remove(limbo.size()-1));
@@ -310,6 +321,53 @@ public class Onirim extends JFrame {
 				doors.get(i).getRect().setLocation(1150,10+(60*i));
 			}
 		}
+		public void organizePro()
+		{
+			for (int i = 0; i < pro.size(); i++) 
+			{
+				pro.get(i).getRect().setLocation(130+(105*i),750);
+			}
+		}
+		public void beginPro()
+		{
+			while(pro.size()!=5)
+				pro.add(deck.getCards().remove(0));
+			organizePro();//TODO make stuff show up in the right place
+		}
+		public void endPro()
+		{
+			while(pro.size()!=0)
+				deck.getCards().add(0,pro.remove(0));
+			
+		}
+
+		private class KeyLissy implements KeyListener {
+
+			@Override
+			public void keyPressed(KeyEvent e) {
+				System.out.println("-----------------------------------------------------");
+				if(e.getKeyCode() == KeyEvent.VK_SPACE){
+					for(Card c : deck.getCards()){
+						System.out.println(c);
+					}
+				}
+				System.out.println("-----------------------------------------------------");
+			}
+
+			@Override
+			public void keyReleased(KeyEvent arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void keyTyped(KeyEvent arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+		}
+		
 		private class Mousey implements MouseListener, MouseMotionListener
 		{	
 			@Override
@@ -386,7 +444,7 @@ public class Onirim extends JFrame {
 				}
 				for(int i=hand.size()-1;-1<i;i--)
 				{
-					if(hand.get(i).isMouse(e)) 
+					if(hand.get(i).isMouse(e)&&hand.size()==5) 
 					{
 						hand.get(i).updateOldRect();
 						hand.get(i).setSelected(true);
@@ -402,6 +460,8 @@ public class Onirim extends JFrame {
 			@Override
 			public void mouseReleased(MouseEvent e) 
 			{
+				System.out.println(checkForEnd());
+				System.out.println(lost);
 				for (int i = 0; i < hand.size(); i++) 
 				{
 					if (hand.get(i).getSelected()) 
@@ -410,6 +470,8 @@ public class Onirim extends JFrame {
 						{
 							discard.addCard(hand.remove(i));
 							discard.organizeDiscard();
+							if(discard.getCards().get(discard.getCards().size()-1).getType().contains("Key"))
+								beginPro();
 							organizeHand();
 						}
 						else if(play.isMouse(e)&&play.validLocationPlay(hand.get(i)))

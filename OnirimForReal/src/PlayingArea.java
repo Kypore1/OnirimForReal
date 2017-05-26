@@ -61,7 +61,7 @@ public class PlayingArea extends Area{
 		int coloums=0;
 		for (int i = 0; i < cards.size(); i++) 
 		{
-			if (i%14==0) 
+			if (i%14==0&&i!=0) 
 			{
 				rows++;
 				coloums=0;

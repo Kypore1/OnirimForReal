@@ -25,6 +25,10 @@ public class Card
 		oldRect = new Rectangle(-200,-200,100,140);
 	}
 	
+	public String toString(){
+		return color + " " + type;
+	}
+	
 	public Image getImage() {return image;}
 	public boolean getSelected() {return selected;}
 	public Rectangle getOldRect(){return oldRect;}
