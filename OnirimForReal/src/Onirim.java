@@ -13,6 +13,7 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.Random;
 
 import javax.swing.JFrame;
@@ -48,13 +49,13 @@ public class Onirim extends JFrame {
 		public ArrayList<Card> limbo = new ArrayList<Card>();
 		public ArrayList<Card> pro = new ArrayList<Card>();
 		
-		public boolean ignoreNightmare,nightmareInPlay;;
+		public boolean ignoreNightmare,nightmareInPlay,prop;
 		public boolean firstDraw = true;
 		
 		public boolean endGame,lost;
 		
 		public Deck deck = new Deck(10,850,100,140,cardBack);
-		public Discard discard = new Discard(10,10,100,700);
+		public Discard discard = new Discard(10,700,100,140);
 		public PlayingArea play = new PlayingArea(130,10,1000,700);
 		
 		public Random rand = new Random();
@@ -140,10 +141,8 @@ public class Onirim extends JFrame {
 				{
 					g.drawImage(limbo.get(i).getImage(), limbo.get(i).getX(), limbo.get(i).getY(), 100, 140,this);
 				}
-				for (int i = 0; i < discard.getCards().size(); i++) 
-				{
-					g.drawImage(discard.getCards().get(i).getImage(), discard.getCards().get(i).getX(), discard.getCards().get(i).getY(), 100, 140,this);
-				}
+				if(!discard.getCards().isEmpty())
+					g.drawImage(discard.getCards().get(discard.getCards().size()-1).getImage(), discard.getMyRect().x, discard.getMyRect().y, 100, 140, this);
 				for (int i = 0; i < play.getCards().size(); i++) 
 				{
 					g.drawImage(play.getCards().get(i).getImage(), play.getCards().get(i).getX(), play.getCards().get(i).getY(), 100, 140,this);
@@ -160,6 +159,13 @@ public class Onirim extends JFrame {
 				g.setStroke(new BasicStroke(4));
 				g.draw(discard.getMyRect());
 				g.draw(play.getMyRect());
+				g.setFont(new Font("Calibri",Font.PLAIN,16));
+				g.drawString("  Sun"+" Moon"+" Key", 10, 10);
+				g.drawString("Red "+discard.totalDiscard()[0]+"  "+discard.totalDiscard()[1]+"  "+discard.totalDiscard()[2], 5, 30);
+				g.drawString("Blue "+discard.totalDiscard()[3]+"  "+discard.totalDiscard()[4]+"  "+discard.totalDiscard()[5], 5, 60);
+				g.drawString("Green "+discard.totalDiscard()[6]+"  "+discard.totalDiscard()[7]+"  "+discard.totalDiscard()[8], 5, 90);
+				g.drawString("Tan "+discard.totalDiscard()[9]+"  "+discard.totalDiscard()[10]+"  "+discard.totalDiscard()[11], 5, 120);
+				
 			}
 			else
 			{
@@ -333,11 +339,13 @@ public class Onirim extends JFrame {
 			while(pro.size()!=5)
 				pro.add(deck.getCards().remove(0));
 			organizePro();//TODO make stuff show up in the right place
+			prop = true;
 		}
 		public void endPro()
 		{
 			while(pro.size()!=0)
-				deck.getCards().add(0,pro.remove(0));
+				deck.getCards().add(0,pro.remove(pro.size()-1));
+			prop=false;
 			
 		}
 
@@ -378,6 +386,11 @@ public class Onirim extends JFrame {
 					{
 						hand.get(i).getRect().setLocation(e.getX()-50, e.getY()-70);
 					}
+				for(int i=0;i<pro.size();i++)
+					if (pro.get(i).getSelected()) 
+					{
+						pro.get(i).getRect().setLocation(e.getX()-50, e.getY()-70);
+					}
 			}
 
 			@Override
@@ -405,95 +418,144 @@ public class Onirim extends JFrame {
 			@Override
 			public void mousePressed(MouseEvent e) 
 			{
-				if(!limbo.isEmpty()&&limbo.get(limbo.size()-1).getType().contains("door"))
-					doorFromKey(e.getPoint());
-				if(deck.isMouse(e)&&canDraw()) 
+				if(!prop)
 				{
-					if (firstDraw||hand.size()==0) 
+					if(!limbo.isEmpty()&&limbo.get(limbo.size()-1).getType().contains("door"))
+						doorFromKey(e.getPoint());
+					if(deck.isMouse(e)&&canDraw()) 
 					{
-						fillHand();
-					}
-					else
-					{
-						hand.add(deck.drawCard());
-						if (hand.get(hand.size()-1).getType().contains("nightmare")||hand.get(hand.size()-1).getType().contains("door")) 
+						if (firstDraw||hand.size()==0) 
 						{
-							limbo.add(hand.remove(hand.size()-1));
-							limbo.get(limbo.size()-1).getRect().setLocation(500+(100*limbo.size()), 850);
-							if(limbo.get(limbo.size()-1).getType().contains("nightmare"))
-								nightmareInPlay=true;
+							fillHand();
+						}
+						else
+						{
+							hand.add(deck.drawCard());
+							if (hand.get(hand.size()-1).getType().contains("nightmare")||hand.get(hand.size()-1).getType().contains("door")) 
+							{
+								limbo.add(hand.remove(hand.size()-1));
+								limbo.get(limbo.size()-1).getRect().setLocation(500+(100*limbo.size()), 850);
+								if(limbo.get(limbo.size()-1).getType().contains("nightmare"))
+									nightmareInPlay=true;
+							}
+						}
+						organizeHand();
+					}
+					else if (nightmareInPlay)
+					{
+						discardKey(e.getPoint());
+						
+						discardDoor(e.getPoint());
+						
+						if(deck.isMouse(e))
+							discardTopFiveDeck();
+						
+						for (int i = 0; i < hand.size(); i++) 
+							if(hand.get(i).getRect().contains(e.getPoint()))
+								discardHand();
+						
+						discard.organizeDiscard();
+						
+					}
+					for(int i=hand.size()-1;-1<i;i--)
+					{
+						if(hand.get(i).isMouse(e)&&hand.size()==5) 
+						{
+							hand.get(i).updateOldRect();
+							hand.get(i).setSelected(true);
+							break;
 						}
 					}
-					organizeHand();
-				}
-				else if (nightmareInPlay)
-				{
-					discardKey(e.getPoint());
-					
-					discardDoor(e.getPoint());
-					
-					if(deck.isMouse(e))
-						discardTopFiveDeck();
-					
-					for (int i = 0; i < hand.size(); i++) 
-						if(hand.get(i).getRect().contains(e.getPoint()))
-							discardHand();
-					
-					discard.organizeDiscard();
-					
-				}
-				for(int i=hand.size()-1;-1<i;i--)
-				{
-					if(hand.get(i).isMouse(e)&&hand.size()==5) 
+					if(hand.size()==5 && limbo.size()>0)
 					{
-						hand.get(i).updateOldRect();
-						hand.get(i).setSelected(true);
-						break;
+						shuffleDeck();
 					}
 				}
-				if(hand.size()==5 && limbo.size()>0)
+				if(prop)
 				{
-					shuffleDeck();
+					for(int i=pro.size()-1;-1<i;i--)
+						if(pro.get(i).isMouse(e)) 
+						{
+							pro.get(i).updateOldRect();
+							pro.get(i).setSelected(true);
+							System.out.println(pro.get(i).getSelected()+"heres");
+							break;
+						}
 				}
 			}
 
 			@Override
 			public void mouseReleased(MouseEvent e) 
 			{
-				System.out.println(checkForEnd());
-				System.out.println(lost);
-				for (int i = 0; i < hand.size(); i++) 
+				if(!prop)
 				{
-					if (hand.get(i).getSelected()) 
+					for (int i = 0; i < hand.size(); i++) 
 					{
-						if (discard.isMouse(e))
+						if (hand.get(i).getSelected()) 
 						{
-							discard.addCard(hand.remove(i));
-							discard.organizeDiscard();
-							if(discard.getCards().get(discard.getCards().size()-1).getType().contains("Key"))
-								beginPro();
-							organizeHand();
-						}
-						else if(play.isMouse(e)&&play.validLocationPlay(hand.get(i)))
-						{
-							play.addCard(hand.remove(i));
-							play.organizePlay();
-							if(play.validSet())
+							if (discard.isMouse(e))
 							{
-								doors.add(deck.getCards().remove(deck.findIndexOfCard("door", play.getCards().get(play.getCards().size()-1).getColor())));
-								organizeDoors();
-								shuffleDeck();
-								play.clearCurrentSet();
+								discard.addCard(hand.remove(i));
+								discard.organizeDiscard();
+								if(discard.getCards().get(discard.getCards().size()-1).getType().contains("Key"))
+									beginPro();
+								organizeHand();
 							}
+							else if(play.isMouse(e)&&play.validLocationPlay(hand.get(i)))
+							{
+								play.addCard(hand.remove(i));
+								play.organizePlay();
+								if(play.validSet())
+								{
+									doors.add(deck.getCards().remove(deck.findIndexOfCard("door", play.getCards().get(play.getCards().size()-1).getColor())));
+									organizeDoors();
+									shuffleDeck();
+									play.clearCurrentSet();
+								}
+							}
+							else
+							{
+								hand.get(i).setSelected(false);
+								hand.get(i).getRect().setLocation(hand.get(i).getOldRect().getLocation());
+							}
+						}
+					}
+						
+				}
+				if(prop)
+				{
+					for (int i = 0; i<pro.size();i++)
+					{
+						if (pro.get(i).getRect().contains(e.getPoint())&&pro.get(i).getSelected()!=true) 
+						{
+							for(int j = 0;j<pro.size();j++)
+							{
+								if(pro.get(j).getSelected()==true)
+								{
+									pro.get(j).setSelected(false);
+									Collections.swap(pro, i,j);
+									organizePro();
+									break;
+								}
+							}
+						}
+						else if(discard.isMouse(e)&&pro.get(i).getSelected()&&!pro.get(i).getType().contains("door"))
+						{
+							pro.get(i).setSelected(false);
+							discard.addCard(pro.remove(i));
+							discard.organizeDiscard();
+
+							endPro();
 						}
 						else
 						{
-							hand.get(i).setSelected(false);
-							hand.get(i).getRect().setLocation(hand.get(i).getOldRect().getLocation());
+							organizePro();
 						}
 					}
+					for (int i = 0; i<pro.size();i++)
+						pro.get(i).setSelected(false);
+						
 				}
-					
 			}
 		}
 }
