@@ -56,7 +56,7 @@ public class Onirim extends JFrame {
 		
 		public Deck deck = new Deck(10,850,100,140,cardBack);
 		public Discard discard = new Discard(10,700,100,140);
-		public PlayingArea play = new PlayingArea(130,10,1000,700);
+		public PlayingArea play = new PlayingArea(130,5,1000,650);
 		
 		public Random rand = new Random();
 		
@@ -165,14 +165,15 @@ public class Onirim extends JFrame {
 				g.drawString("Blue "+discard.totalDiscard()[3]+"  "+discard.totalDiscard()[4]+"  "+discard.totalDiscard()[5], 5, 60);
 				g.drawString("Green "+discard.totalDiscard()[6]+"  "+discard.totalDiscard()[7]+"  "+discard.totalDiscard()[8], 5, 90);
 				g.drawString("Tan "+discard.totalDiscard()[9]+"  "+discard.totalDiscard()[10]+"  "+discard.totalDiscard()[11], 5, 120);
-				
+				g.drawString("Nightmare "+discard.totalDiscard()[12], 5, 150);
+				g.drawString("Cards in Deck "+ deck.getCards().size(), 5, 180);
 			}
 			else
 			{
 				g.setColor(Color.WHITE);
 				g.setFont(new Font("Papyrus",Font.PLAIN,200));
 				if(lost)
-					g.drawString("You Lost", 130, 10);
+					g.drawString("You Lost", 130, 500);
 				else
 					g.drawString("You Won", 150, 500);
 			}
@@ -241,7 +242,7 @@ public class Onirim extends JFrame {
 						counter--;
 					}
 					else
-						limbo.add(deck.getCards().remove(0));
+						limbo.add(0,deck.getCards().remove(0));
 				}
 				ignoreNightmare=true;
 				discard.addCard(limbo.remove(limbo.size()-1));
@@ -331,7 +332,7 @@ public class Onirim extends JFrame {
 		{
 			for (int i = 0; i < pro.size(); i++) 
 			{
-				pro.get(i).getRect().setLocation(130+(105*i),750);
+				pro.get(i).getRect().setLocation(130+(105*i),700);
 			}
 		}
 		public void beginPro()
